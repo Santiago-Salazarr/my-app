@@ -1,98 +1,250 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { router } from "expo-router";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+    >
+      <View style={styles.header}>
+        <Text style={styles.brand}>Tuluá Conecta</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <Text style={styles.subtitle}>
+          Empleo, educación y oportunidades para crecer
+        </Text>
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      <View style={styles.welcome}>
+        <Text style={styles.welcomeTitle}>
+          ¡Hola! 👋
+        </Text>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <Text style={styles.welcomeText}>
+          ¿Qué estás buscando hoy?
+        </Text>
+      </View>
+
+      <Pressable
+        style={styles.card}
+        onPress={() => router.push("/empleo")}
+      >
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>💼</Text>
+        </View>
+
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>
+            Buscar empleo
+          </Text>
+
+          <Text style={styles.cardText}>
+            Encuentra oportunidades laborales disponibles.
+          </Text>
+        </View>
+
+        <Text style={styles.arrow}>›</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.card}
+        onPress={() => router.push("/educacion")}
+      >
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>🎓</Text>
+        </View>
+
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>
+            Educación
+          </Text>
+
+          <Text style={styles.cardText}>
+            Explora cursos, programas y oportunidades educativas.
+          </Text>
+        </View>
+
+        <Text style={styles.arrow}>›</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.card}
+        onPress={() => router.push("/aprende")}
+      >
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>📚</Text>
+        </View>
+
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>
+            Aprende
+          </Text>
+
+          <Text style={styles.cardText}>
+            Desarrolla habilidades para tu futuro laboral.
+          </Text>
+        </View>
+
+        <Text style={styles.arrow}>›</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.card}
+        onPress={() => router.push("/perfil")}
+      >
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>👤</Text>
+        </View>
+
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>
+            Mi perfil
+          </Text>
+
+          <Text style={styles.cardText}>
+            Consulta tus favoritos y postulaciones.
+          </Text>
+        </View>
+
+        <Text style={styles.arrow}>›</Text>
+      </Pressable>
+
+      <View style={styles.message}>
+        <Text style={styles.messageTitle}>
+          Conectamos oportunidades
+        </Text>
+
+        <Text style={styles.messageText}>
+          Encuentra herramientas para trabajar, aprender y avanzar.
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: "#F4F7FB",
   },
-  safeArea: {
+
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 55,
+    paddingBottom: 40,
+  },
+
+  header: {
+    marginBottom: 30,
+  },
+
+  brand: {
+    color: "#1269E8",
+    fontSize: 34,
+    fontWeight: "800",
+  },
+
+  subtitle: {
+    color: "#64748B",
+    fontSize: 16,
+    lineHeight: 23,
+    marginTop: 7,
+  },
+
+  welcome: {
+    marginBottom: 22,
+  },
+
+  welcomeTitle: {
+    fontSize: 25,
+    fontWeight: "700",
+    color: "#172033",
+  },
+
+  welcomeText: {
+    fontSize: 16,
+    color: "#64748B",
+    marginTop: 4,
+  },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 17,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  iconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "#EAF2FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  icon: {
+    fontSize: 27,
+  },
+
+  cardContent: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    marginLeft: 15,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#172033",
   },
-  title: {
-    textAlign: 'center',
+
+  cardText: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 19,
+    marginTop: 4,
   },
-  code: {
-    textTransform: 'uppercase',
+
+  arrow: {
+    color: "#1269E8",
+    fontSize: 31,
+    marginLeft: 8,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+
+  message: {
+    backgroundColor: "#1269E8",
+    borderRadius: 20,
+    padding: 22,
+    marginTop: 12,
+  },
+
+  messageTitle: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 19,
+  },
+
+  messageText: {
+    color: "#EAF2FF",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 7,
   },
 });
