@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { useAuthStore } from "../../store/useAuthStore";
 import {
   Alert,
   Pressable,
@@ -9,6 +10,15 @@ import {
 } from "react-native";
 
 export default function PerfilScreen() {
+  // 1. Los hooks SIEMPRE van aquí adentro de PerfilScreen()
+  const usuario = useAuthStore((state) => state.usuario);
+  const cerrarSesion = useAuthStore((state) => state.cerrarSesion);
+
+  const manejarCerrarSesion = () => {
+    cerrarSesion();
+    router.replace("/login");
+  };
+
   const mostrarProximamente = (seccion: string) => {
     Alert.alert(
       seccion,
@@ -30,21 +40,23 @@ export default function PerfilScreen() {
         </Text>
       </View>
 
-      {/* Usuario */}
+      {/* Usuario conectado dinámicamente */}
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>👤</Text>
         </View>
 
-        <Text style={styles.name}>Usuario Tuluá Conecta</Text>
+        <Text style={styles.name}>
+          {usuario?.nombre || "Usuario Tuluá Conecta"}
+        </Text>
 
         <Text style={styles.email}>
-          usuario@tuluaconecta.com
+          {usuario?.email || "usuario@tuluaconecta.com"}
         </Text>
 
         <View style={styles.status}>
           <Text style={styles.statusText}>
-            Perfil activo
+            Perfil activo ({usuario?.proveedor || "Demo"})
           </Text>
         </View>
       </View>
@@ -174,6 +186,20 @@ export default function PerfilScreen() {
         Perfil de demostración. Los datos del usuario se
         conectarán posteriormente con la autenticación.
       </Text>
+      <Pressable
+        onPress={manejarCerrarSesion}
+        style={{
+          backgroundColor: "#FEE2E2",
+          paddingVertical: 14,
+          borderRadius: 10,
+          alignItems: "center",
+          marginTop: 24,
+        }}
+      >
+        <Text style={{ color: "#DC2626", fontWeight: "700", fontSize: 16 }}>
+          Cerrar sesión
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }

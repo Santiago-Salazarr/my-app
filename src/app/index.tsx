@@ -1,4 +1,5 @@
-import { router } from "expo-router";
+import { useAuthStore } from "../../store/useAuthStore";
+import { router, Redirect } from "expo-router";
 import {
   Pressable,
   ScrollView,
@@ -8,6 +9,11 @@ import {
 } from "react-native";
 
 export default function HomeScreen() {
+  const estaAutenticado = useAuthStore((state) => state.estaAutenticado);
+
+  if (!estaAutenticado) {
+    return <Redirect href="/login" />;
+  }
   return (
     <ScrollView
       style={styles.container}
@@ -17,7 +23,7 @@ export default function HomeScreen() {
         <Text style={styles.brand}>Tuluá Conecta</Text>
 
         <Text style={styles.subtitle}>
-          Empleo, educación y oportunidades para crecer
+          Empleo,plataforma de educación y oportunidades para crecer
         </Text>
       </View>
 
