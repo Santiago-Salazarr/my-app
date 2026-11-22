@@ -1,5 +1,4 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
 import {
   Alert,
   Pressable,
@@ -8,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useActivityStore } from "../../../store/useActivityStore";
 
 const ofertas = {
   "1": {
@@ -25,7 +25,6 @@ const ofertas = {
       "Trabajo en equipo",
     ],
   },
-
   "2": {
     cargo: "Auxiliar Administrativo",
     empresa: "Empresa Demo Servicios",
@@ -41,7 +40,6 @@ const ofertas = {
       "Servicio al cliente",
     ],
   },
-
   "3": {
     cargo: "Asesor Comercial",
     empresa: "Empresa Demo Comercial",
@@ -57,7 +55,6 @@ const ofertas = {
       "Actitud de servicio",
     ],
   },
-
   "4": {
     cargo: "Diseñador de contenido digital",
     empresa: "Empresa Demo Creativa",
@@ -80,29 +77,36 @@ type OfertaId = keyof typeof ofertas;
 export default function OfertaDetalleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const [favorito, setFavorito] = useState(false);
-  const [postulado, setPostulado] = useState(false);
+  // Conectamos favoritos y postulaciones al store global
+  const favoritos = useActivityStore((state) => state.favoritos);
+  const toggleFavorito = useActivityStore((state) => state.toggleFavorito);
+  const postulaciones = useActivityStore((state) => state.postulaciones);
+  const agregarPostulacion = useActivityStore((state) => state.agregarPostulacion);
 
   const oferta = ofertas[id as OfertaId];
 
   if (!oferta) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>
-          Oferta no encontrada
-        </Text>
-
-        <Pressable
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backButtonText}>
-            Volver
-          </Text>
+        <Text style={styles.errorTitle}>Oferta no encontrada</Text>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>Volver</Text>
         </Pressable>
       </View>
     );
   }
+
+  const favorito = favoritos.some((fav) => fav.id === id);
+  const postulado = postulaciones.some((post) => post.id === id);
+
+  const manejarFavorito = () => {
+    toggleFavorito({
+      id: id as string,
+      titulo: oferta.cargo,
+      subtitulo: oferta.empresa,
+      tipo: "empleo",
+    });
+  };
 
   const postularme = () => {
     if (postulado) {
@@ -110,15 +114,19 @@ export default function OfertaDetalleScreen() {
         "Postulación registrada",
         "Ya te has postulado a esta oferta."
       );
-
       return;
     }
 
-    setPostulado(true);
+    agregarPostulacion({
+      id: id as string,
+      titulo: oferta.cargo,
+      subtitulo: oferta.empresa,
+      tipo: "empleo",
+    });
 
     Alert.alert(
       "✅ Postulación realizada",
-      "Tu postulación ha sido registrada correctamente en el prototipo."
+      "Tu postulación ha sido registrada correctamente."
     );
   };
 
@@ -131,9 +139,7 @@ export default function OfertaDetalleScreen() {
         style={styles.returnButton}
         onPress={() => router.back()}
       >
-        <Text style={styles.returnText}>
-          ← Volver
-        </Text>
+        <Text style={styles.returnText}>← Volver</Text>
       </Pressable>
 
       <View style={styles.hero}>
@@ -141,66 +147,38 @@ export default function OfertaDetalleScreen() {
           <Text style={styles.icon}>💼</Text>
         </View>
 
-        <Text style={styles.title}>
-          {oferta.cargo}
-        </Text>
-
-        <Text style={styles.company}>
-          {oferta.empresa}
-        </Text>
+        <Text style={styles.title}>{oferta.cargo}</Text>
+        <Text style={styles.company}>{oferta.empresa}</Text>
       </View>
 
       <View style={styles.informationCard}>
-        <Text style={styles.information}>
-          📍 {oferta.ubicacion}
-        </Text>
-
-        <Text style={styles.information}>
-          💰 {oferta.salario}
-        </Text>
-
-        <Text style={styles.information}>
-          🕐 {oferta.modalidad}
-        </Text>
+        <Text style={styles.information}>📍 {oferta.ubicacion}</Text>
+        <Text style={styles.information}>💰 {oferta.salario}</Text>
+        <Text style={styles.information}>🕐 {oferta.modalidad}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          Descripción
-        </Text>
-
-        <Text style={styles.description}>
-          {oferta.descripcion}
-        </Text>
+        <Text style={styles.sectionTitle}>Descripción</Text>
+        <Text style={styles.description}>{oferta.descripcion}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          Requisitos
-        </Text>
+        <Text style={styles.sectionTitle}>Requisitos</Text>
 
         {oferta.requisitos.map((requisito) => (
-          <View
-            key={requisito}
-            style={styles.requirement}
-          >
+          <View key={requisito} style={styles.requirement}>
             <Text style={styles.check}>✓</Text>
-
-            <Text style={styles.requirementText}>
-              {requisito}
-            </Text>
+            <Text style={styles.requirementText}>{requisito}</Text>
           </View>
         ))}
       </View>
 
       <Pressable
         style={styles.favoriteButton}
-        onPress={() => setFavorito(!favorito)}
+        onPress={manejarFavorito}
       >
         <Text style={styles.favoriteText}>
-          {favorito
-            ? "❤️ Oferta guardada"
-            : "🤍 Guardar oferta"}
+          {favorito ? "❤️ Oferta guardada" : "🤍 Guardar oferta"}
         </Text>
       </Pressable>
 
@@ -212,9 +190,7 @@ export default function OfertaDetalleScreen() {
         onPress={postularme}
       >
         <Text style={styles.applyText}>
-          {postulado
-            ? "✓ Ya te postulaste"
-            : "Postularme"}
+          {postulado ? "✓ Ya te postulaste" : "Postularme"}
         </Text>
       </Pressable>
 

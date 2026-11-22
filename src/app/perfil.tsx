@@ -1,3 +1,4 @@
+import { useActivityStore } from "../../store/useActivityStore";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/useAuthStore";
 import {
@@ -13,11 +14,24 @@ export default function PerfilScreen() {
   // 1. Los hooks SIEMPRE van aquí adentro de PerfilScreen()
   const usuario = useAuthStore((state) => state.usuario);
   const cerrarSesion = useAuthStore((state) => state.cerrarSesion);
-
+  const favoritos = useActivityStore((state) => state.favoritos);
+  const postulaciones = useActivityStore((state) => state.postulaciones);
+  const aprendizaje = useActivityStore((state) => state.aprendizaje);
   const manejarCerrarSesion = () => {
     cerrarSesion();
     router.replace("/login");
   };
+
+  const verLista = (titulo: string, lista: typeof favoritos) => {
+  if (lista.length === 0) {
+    Alert.alert(titulo, "Aún no tienes elementos registrados aquí.");
+    return;
+  }
+  const resumen = lista
+    .map((item) => `• ${item.titulo} (${item.subtitulo})`)
+    .join("\n");
+  Alert.alert(titulo, resumen);
+};
 
   const mostrarProximamente = (seccion: string) => {
     Alert.alert(
@@ -69,32 +83,20 @@ export default function PerfilScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>❤️</Text>
-
-          <Text style={styles.statNumber}>0</Text>
-
-          <Text style={styles.statLabel}>
-            Favoritos
-          </Text>
+          <Text style={styles.statNumber}>{favoritos.length}</Text>
+          <Text style={styles.statLabel}>Favoritos</Text>
         </View>
 
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>📄</Text>
-
-          <Text style={styles.statNumber}>0</Text>
-
-          <Text style={styles.statLabel}>
-            Postulaciones
-          </Text>
+          <Text style={styles.statNumber}>{postulaciones.length}</Text>
+          <Text style={styles.statLabel}>Postulaciones</Text>
         </View>
 
         <View style={styles.statCard}>
           <Text style={styles.statIcon}>📚</Text>
-
-          <Text style={styles.statNumber}>0</Text>
-
-          <Text style={styles.statLabel}>
-            Aprendizaje
-          </Text>
+          <Text style={styles.statNumber}>{aprendizaje.length}</Text>
+          <Text style={styles.statLabel}>Aprendizaje</Text>
         </View>
       </View>
 
@@ -105,9 +107,7 @@ export default function PerfilScreen() {
 
       <Pressable
         style={styles.option}
-        onPress={() =>
-          mostrarProximamente("Mis favoritos")
-        }
+        onPress={() => verLista("Mis favoritos", favoritos)}
       >
         <View style={styles.optionIcon}>
           <Text style={styles.optionEmoji}>❤️</Text>
@@ -128,9 +128,7 @@ export default function PerfilScreen() {
 
       <Pressable
         style={styles.option}
-        onPress={() =>
-          mostrarProximamente("Mis postulaciones")
-        }
+        onPress={() => verLista("Mis postulaciones", postulaciones)}
       >
         <View style={styles.optionIcon}>
           <Text style={styles.optionEmoji}>📄</Text>
@@ -151,9 +149,7 @@ export default function PerfilScreen() {
 
       <Pressable
         style={styles.option}
-        onPress={() =>
-          mostrarProximamente("Mi aprendizaje")
-        }
+        onPress={() => verLista("Mi aprendizaje", aprendizaje)}
       >
         <View style={styles.optionIcon}>
           <Text style={styles.optionEmoji}>🎓</Text>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -7,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useActivityStore } from "../../store/useActivityStore";
 
 type Categoria = "Todos" | "Cursos" | "Becas" | "Programas";
 
@@ -63,26 +65,22 @@ const oportunidades = [
   },
 ];
 
-const categorias: Categoria[] = [
-  "Todos",
-  "Cursos",
-  "Becas",
-  "Programas",
-];
+const categorias: Categoria[] = ["Todos", "Cursos", "Becas", "Programas"];
 
 export default function EducacionScreen() {
   const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] =
-    useState<Categoria>("Todos");
-  const [favoritos, setFavoritos] = useState<string[]>([]);
+  const [categoria, setCategoria] = useState<Categoria>("Todos");
+
+  // Conectamos al store global de aprendizaje
+  const aprendizaje = useActivityStore((state) => state.aprendizaje);
+  const toggleAprendizaje = useActivityStore((state) => state.toggleAprendizaje);
 
   const resultados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
 
     return oportunidades.filter((oportunidad) => {
       const coincideCategoria =
-        categoria === "Todos" ||
-        oportunidad.tipo === categoria;
+        categoria === "Todos" || oportunidad.tipo === categoria;
 
       const coincideBusqueda =
         !texto ||
@@ -94,18 +92,6 @@ export default function EducacionScreen() {
     });
   }, [busqueda, categoria]);
 
-  const cambiarFavorito = (id: string) => {
-    setFavoritos((actuales) => {
-      if (actuales.includes(id)) {
-        return actuales.filter(
-          (favoritoId) => favoritoId !== id
-        );
-      }
-
-      return [...actuales, id];
-    });
-  };
-
   return (
     <ScrollView
       style={styles.container}
@@ -113,10 +99,8 @@ export default function EducacionScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Educación 🎓</Text>
-
         <Text style={styles.subtitle}>
-          Descubre cursos, becas y programas para continuar
-          aprendiendo.
+          Descubre cursos, becas y programas para continuar aprendiendo.
         </Text>
       </View>
 
@@ -148,8 +132,7 @@ export default function EducacionScreen() {
               <Text
                 style={[
                   styles.categoryText,
-                  seleccionado &&
-                    styles.categoryTextSelected,
+                  seleccionado && styles.categoryTextSelected,
                 ]}
               >
                 {item}
@@ -160,86 +143,61 @@ export default function EducacionScreen() {
       </ScrollView>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          Oportunidades
-        </Text>
-
-        <Text style={styles.counter}>
-          {resultados.length}
-        </Text>
+        <Text style={styles.sectionTitle}>Oportunidades</Text>
+        <Text style={styles.counter}>{resultados.length}</Text>
       </View>
 
       {resultados.map((oportunidad) => {
-        const favorito = favoritos.includes(
-          oportunidad.id
-        );
+        const itemId = `edu-${oportunidad.id}`;
+        const favorito = aprendizaje.some((item) => item.id === itemId);
 
         return (
-          <View
-            key={oportunidad.id}
-            style={styles.card}
-          >
+          <View key={oportunidad.id} style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.iconContainer}>
-                <Text style={styles.icon}>
-                  {oportunidad.emoji}
-                </Text>
+                <Text style={styles.icon}>{oportunidad.emoji}</Text>
               </View>
 
               <View style={styles.cardHeading}>
                 <View style={styles.typeBadge}>
-                  <Text style={styles.typeText}>
-                    {oportunidad.tipo}
-                  </Text>
+                  <Text style={styles.typeText}>{oportunidad.tipo}</Text>
                 </View>
 
-                <Text style={styles.cardTitle}>
-                  {oportunidad.titulo}
-                </Text>
-
-                <Text style={styles.institution}>
-                  {oportunidad.institucion}
-                </Text>
+                <Text style={styles.cardTitle}>{oportunidad.titulo}</Text>
+                <Text style={styles.institution}>{oportunidad.institucion}</Text>
               </View>
 
               <Pressable
                 style={styles.favoriteButton}
                 onPress={() =>
-                  cambiarFavorito(oportunidad.id)
+                  toggleAprendizaje({
+                    id: itemId,
+                    titulo: oportunidad.titulo,
+                    subtitulo: oportunidad.institucion,
+                    tipo: "curso",
+                  })
                 }
               >
-                <Text style={styles.favorite}>
-                  {favorito ? "❤️" : "🤍"}
-                </Text>
+                <Text style={styles.favorite}>{favorito ? "❤️" : "🤍"}</Text>
               </Pressable>
             </View>
 
             <View style={styles.details}>
-              <Text style={styles.detail}>
-                🌐 {oportunidad.modalidad}
-              </Text>
-
-              <Text style={styles.detail}>
-                ⏱️ {oportunidad.duracion}
-              </Text>
-
-              <Text style={styles.detail}>
-                📖 {oportunidad.nivel}
-              </Text>
+              <Text style={styles.detail}>🌐 {oportunidad.modalidad}</Text>
+              <Text style={styles.detail}>⏱️ {oportunidad.duracion}</Text>
+              <Text style={styles.detail}>📖 {oportunidad.nivel}</Text>
             </View>
 
             <Pressable
               style={styles.button}
-              onPress={() => {
-                console.log(
-                  "Oportunidad seleccionada:",
-                  oportunidad.id
-                );
-              }}
+              onPress={() =>
+                Alert.alert(
+                  oportunidad.titulo,
+                  `Institución: ${oportunidad.institucion}\nModalidad: ${oportunidad.modalidad}\nDuración: ${oportunidad.duracion}\nNivel: ${oportunidad.nivel}`
+                )
+              }
             >
-              <Text style={styles.buttonText}>
-                Ver oportunidad
-              </Text>
+              <Text style={styles.buttonText}>Ver oportunidad</Text>
             </Pressable>
           </View>
         );
@@ -248,32 +206,24 @@ export default function EducacionScreen() {
       {resultados.length === 0 && (
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>🔎</Text>
-
-          <Text style={styles.emptyTitle}>
-            No encontramos resultados
-          </Text>
-
+          <Text style={styles.emptyTitle}>No encontramos resultados</Text>
           <Text style={styles.emptyText}>
-            Prueba con otra palabra o selecciona otra
-            categoría.
+            Prueba con otra palabra o selecciona otra categoría.
           </Text>
         </View>
       )}
 
       <View style={styles.information}>
-        <Text style={styles.informationTitle}>
-          💡 Sigue aprendiendo
-        </Text>
-
+        <Text style={styles.informationTitle}>💡 Sigue aprendiendo</Text>
         <Text style={styles.informationText}>
-          Desarrollar nuevas habilidades puede ampliar tus
-          oportunidades educativas y laborales.
+          Desarrollar nuevas habilidades puede ampliar tus oportunidades
+          educativas y laborales.
         </Text>
       </View>
 
       <Text style={styles.demo}>
-        Contenido ficticio utilizado únicamente para demostrar
-        el funcionamiento del prototipo.
+        Contenido ficticio utilizado únicamente para demostrar el funcionamiento
+        del prototipo.
       </Text>
     </ScrollView>
   );

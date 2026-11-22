@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -7,12 +8,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useActivityStore } from "../../store/useActivityStore";
 
-type Categoria =
-  | "Todos"
-  | "Empleo"
-  | "Digital"
-  | "Desarrollo personal";
+type Categoria = "Todos" | "Empleo" | "Digital" | "Desarrollo personal";
 
 const contenidos = [
   {
@@ -80,18 +78,18 @@ const categorias: Categoria[] = [
 
 export default function AprendeScreen() {
   const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] =
-    useState<Categoria>("Todos");
+  const [categoria, setCategoria] = useState<Categoria>("Todos");
 
-  const [guardados, setGuardados] = useState<string[]>([]);
+  // Conectamos al store global de aprendizaje
+  const aprendizaje = useActivityStore((state) => state.aprendizaje);
+  const toggleAprendizaje = useActivityStore((state) => state.toggleAprendizaje);
 
   const resultados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
 
     return contenidos.filter((contenido) => {
       const coincideCategoria =
-        categoria === "Todos" ||
-        contenido.categoria === categoria;
+        categoria === "Todos" || contenido.categoria === categoria;
 
       const coincideBusqueda =
         !texto ||
@@ -102,18 +100,6 @@ export default function AprendeScreen() {
     });
   }, [busqueda, categoria]);
 
-  const guardarContenido = (id: string) => {
-    setGuardados((actuales) => {
-      if (actuales.includes(id)) {
-        return actuales.filter(
-          (contenidoId) => contenidoId !== id
-        );
-      }
-
-      return [...actuales, id];
-    });
-  };
-
   return (
     <ScrollView
       style={styles.container}
@@ -121,21 +107,16 @@ export default function AprendeScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Aprende 📚</Text>
-
         <Text style={styles.subtitle}>
-          Recursos rápidos para desarrollar habilidades y
-          mejorar tus oportunidades.
+          Recursos rápidos para desarrollar habilidades y mejorar tus
+          oportunidades.
         </Text>
       </View>
 
       <View style={styles.featured}>
         <Text style={styles.featuredEmoji}>🚀</Text>
-
         <View style={styles.featuredContent}>
-          <Text style={styles.featuredTitle}>
-            Impulsa tu futuro
-          </Text>
-
+          <Text style={styles.featuredTitle}>Impulsa tu futuro</Text>
           <Text style={styles.featuredText}>
             Aprende algo nuevo cada día y fortalece tu perfil.
           </Text>
@@ -170,8 +151,7 @@ export default function AprendeScreen() {
               <Text
                 style={[
                   styles.categoryText,
-                  seleccionado &&
-                    styles.categoryTextSelected,
+                  seleccionado && styles.categoryTextSelected,
                 ]}
               >
                 {item}
@@ -182,73 +162,56 @@ export default function AprendeScreen() {
       </ScrollView>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          Explora contenido
-        </Text>
-
-        <Text style={styles.counter}>
-          {resultados.length}
-        </Text>
+        <Text style={styles.sectionTitle}>Explora contenido</Text>
+        <Text style={styles.counter}>{resultados.length}</Text>
       </View>
 
       {resultados.map((contenido) => {
-        const guardado = guardados.includes(contenido.id);
+        const itemId = `apr-${contenido.id}`;
+        const guardado = aprendizaje.some((item) => item.id === itemId);
 
         return (
-          <View
-            key={contenido.id}
-            style={styles.card}
-          >
+          <View key={contenido.id} style={styles.card}>
             <View style={styles.cardTop}>
               <View style={styles.iconContainer}>
-                <Text style={styles.icon}>
-                  {contenido.emoji}
-                </Text>
+                <Text style={styles.icon}>{contenido.emoji}</Text>
               </View>
 
               <View style={styles.cardHeading}>
-                <Text style={styles.categoryLabel}>
-                  {contenido.categoria}
-                </Text>
-
-                <Text style={styles.cardTitle}>
-                  {contenido.titulo}
-                </Text>
+                <Text style={styles.categoryLabel}>{contenido.categoria}</Text>
+                <Text style={styles.cardTitle}>{contenido.titulo}</Text>
               </View>
 
               <Pressable
                 style={styles.saveButton}
                 onPress={() =>
-                  guardarContenido(contenido.id)
+                  toggleAprendizaje({
+                    id: itemId,
+                    titulo: contenido.titulo,
+                    subtitulo: contenido.categoria,
+                    tipo: "recurso",
+                  })
                 }
               >
-                <Text style={styles.saveIcon}>
-                  {guardado ? "❤️" : "🤍"}
-                </Text>
+                <Text style={styles.saveIcon}>{guardado ? "❤️" : "🤍"}</Text>
               </Pressable>
             </View>
 
-            <Text style={styles.description}>
-              {contenido.descripcion}
-            </Text>
+            <Text style={styles.description}>{contenido.descripcion}</Text>
 
             <View style={styles.cardBottom}>
-              <Text style={styles.duration}>
-                ⏱️ {contenido.duracion}
-              </Text>
+              <Text style={styles.duration}>⏱️ {contenido.duracion}</Text>
 
               <Pressable
                 style={styles.learnButton}
-                onPress={() => {
-                  console.log(
-                    "Contenido seleccionado:",
-                    contenido.id
-                  );
-                }}
+                onPress={() =>
+                  Alert.alert(
+                    `${contenido.titulo} (${contenido.duracion})`,
+                    contenido.descripcion
+                  )
+                }
               >
-                <Text style={styles.learnButtonText}>
-                  Aprender
-                </Text>
+                <Text style={styles.learnButtonText}>Aprender</Text>
               </Pressable>
             </View>
           </View>
@@ -258,11 +221,7 @@ export default function AprendeScreen() {
       {resultados.length === 0 && (
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>🔎</Text>
-
-          <Text style={styles.emptyTitle}>
-            No encontramos contenido
-          </Text>
-
+          <Text style={styles.emptyTitle}>No encontramos contenido</Text>
           <Text style={styles.emptyText}>
             Prueba con otra palabra o categoría.
           </Text>
@@ -271,14 +230,9 @@ export default function AprendeScreen() {
 
       <View style={styles.finalCard}>
         <Text style={styles.finalEmoji}>🌱</Text>
-
-        <Text style={styles.finalTitle}>
-          Sigue creciendo
-        </Text>
-
+        <Text style={styles.finalTitle}>Sigue creciendo</Text>
         <Text style={styles.finalText}>
-          Cada nueva habilidad puede acercarte a una nueva
-          oportunidad.
+          Cada nueva habilidad puede acercarte a una nueva oportunidad.
         </Text>
       </View>
     </ScrollView>

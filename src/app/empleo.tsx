@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useActivityStore } from "../../store/useActivityStore";
 
 const ofertas = [
   {
@@ -46,33 +47,22 @@ const ofertas = [
 
 export default function EmpleoScreen() {
   const [busqueda, setBusqueda] = useState("");
-  const [favoritos, setFavoritos] = useState<string[]>([]);
+  
+  // Conectamos al store global
+  const favoritos = useActivityStore((state) => state.favoritos);
+  const toggleFavorito = useActivityStore((state) => state.toggleFavorito);
 
   const ofertasFiltradas = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
+    if (!texto) return ofertas;
 
-    if (!texto) {
-      return ofertas;
-    }
-
-    return ofertas.filter((oferta) => {
-      return (
+    return ofertas.filter(
+      (oferta) =>
         oferta.cargo.toLowerCase().includes(texto) ||
         oferta.empresa.toLowerCase().includes(texto) ||
         oferta.ubicacion.toLowerCase().includes(texto)
-      );
-    });
+    );
   }, [busqueda]);
-
-  const cambiarFavorito = (id: string) => {
-    setFavoritos((actuales) => {
-      if (actuales.includes(id)) {
-        return actuales.filter((favoritoId) => favoritoId !== id);
-      }
-
-      return [...actuales, id];
-    });
-  };
 
   return (
     <ScrollView
@@ -81,7 +71,6 @@ export default function EmpleoScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Empleo 💼</Text>
-
         <Text style={styles.subtitle}>
           Encuentra oportunidades para impulsar tu futuro.
         </Text>
@@ -96,17 +85,12 @@ export default function EmpleoScreen() {
       />
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          Ofertas disponibles
-        </Text>
-
-        <Text style={styles.counter}>
-          {ofertasFiltradas.length}
-        </Text>
+        <Text style={styles.sectionTitle}>Ofertas disponibles</Text>
+        <Text style={styles.counter}>{ofertasFiltradas.length}</Text>
       </View>
 
       {ofertasFiltradas.map((oferta) => {
-        const esFavorito = favoritos.includes(oferta.id);
+        const esFavorito = favoritos.some((fav) => fav.id === oferta.id);
 
         return (
           <View key={oferta.id} style={styles.card}>
@@ -116,18 +100,20 @@ export default function EmpleoScreen() {
               </View>
 
               <View style={styles.jobHeading}>
-                <Text style={styles.jobTitle}>
-                  {oferta.cargo}
-                </Text>
-
-                <Text style={styles.company}>
-                  {oferta.empresa}
-                </Text>
+                <Text style={styles.jobTitle}>{oferta.cargo}</Text>
+                <Text style={styles.company}>{oferta.empresa}</Text>
               </View>
 
               <Pressable
                 style={styles.favoriteButton}
-                onPress={() => cambiarFavorito(oferta.id)}
+                onPress={() =>
+                  toggleFavorito({
+                    id: oferta.id,
+                    titulo: oferta.cargo,
+                    subtitulo: oferta.empresa,
+                    tipo: "empleo",
+                  })
+                }
               >
                 <Text style={styles.favorite}>
                   {esFavorito ? "❤️" : "🤍"}
@@ -136,31 +122,21 @@ export default function EmpleoScreen() {
             </View>
 
             <View style={styles.details}>
-              <Text style={styles.detail}>
-                📍 {oferta.ubicacion}
-              </Text>
-
-              <Text style={styles.detail}>
-                💰 {oferta.salario}
-              </Text>
-
-              <Text style={styles.detail}>
-                🕐 {oferta.modalidad}
-              </Text>
+              <Text style={styles.detail}>📍 {oferta.ubicacion}</Text>
+              <Text style={styles.detail}>💰 {oferta.salario}</Text>
+              <Text style={styles.detail}>🕐 {oferta.modalidad}</Text>
             </View>
 
             <Pressable
               style={styles.button}
               onPress={() =>
                 router.push({
-                    pathname: "/oferta/[id]",
-                    params: { id: oferta.id },
+                  pathname: "/oferta/[id]",
+                  params: { id: oferta.id },
                 })
               }
             >
-              <Text style={styles.buttonText}>
-                Ver oferta
-              </Text>
+              <Text style={styles.buttonText}>Ver oferta</Text>
             </Pressable>
           </View>
         );
@@ -169,11 +145,7 @@ export default function EmpleoScreen() {
       {ofertasFiltradas.length === 0 && (
         <View style={styles.empty}>
           <Text style={styles.emptyIcon}>🔎</Text>
-
-          <Text style={styles.emptyTitle}>
-            No encontramos resultados
-          </Text>
-
+          <Text style={styles.emptyTitle}>No encontramos resultados</Text>
           <Text style={styles.emptyText}>
             Prueba buscando otro cargo o palabra clave.
           </Text>

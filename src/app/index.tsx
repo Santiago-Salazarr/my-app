@@ -10,10 +10,13 @@ import {
 
 export default function HomeScreen() {
   const estaAutenticado = useAuthStore((state) => state.estaAutenticado);
+  // 1. Extraes los datos del usuario desde el store
+  const usuario = useAuthStore((state) => state.usuario);
 
   if (!estaAutenticado) {
     return <Redirect href="/login" />;
   }
+
   return (
     <ScrollView
       style={styles.container}
@@ -21,17 +24,16 @@ export default function HomeScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.brand}>Tuluá Conecta</Text>
-
         <Text style={styles.subtitle}>
-          Empleo,plataforma de educación y oportunidades para crecer
+          Empleo, plataforma de educación y oportunidades para crecer
         </Text>
       </View>
 
       <View style={styles.welcome}>
+        {/* 2. Usas las llaves { } dentro del Text para imprimir la variable */}
         <Text style={styles.welcomeTitle}>
-          ¡Hola! 👋
+          ¡Hola, {usuario?.nombre || "Usuario"}! 👋
         </Text>
-
         <Text style={styles.welcomeText}>
           ¿Qué estás buscando hoy?
         </Text>
